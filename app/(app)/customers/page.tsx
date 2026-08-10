@@ -12,6 +12,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { SearchBox } from "@/components/ui/search-box";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { PageTitle } from "@/components/ui/typography";
+import { LinkText } from "@/components/ui/link-text";
 
 const PAGE_SIZE = 20;
 
@@ -43,7 +45,7 @@ export default async function CustomersPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Clientes</h1>
+          <PageTitle>Clientes</PageTitle>
           <p className="text-sm text-muted-foreground">
             Empresas ou pessoas donas dos ativos que você gerencia.
           </p>
@@ -63,13 +65,7 @@ export default async function CustomersPage({
             ) : (
               <>
                 Nenhum cliente cadastrado ainda.{" "}
-                <Link
-                  href="/customers/new"
-                  className="underline underline-offset-4"
-                >
-                  Cadastre o primeiro
-                </Link>
-                .
+                <LinkText href="/customers/new">Cadastre o primeiro</LinkText>.
               </>
             )}
           </CardContent>
@@ -90,15 +86,16 @@ export default async function CustomersPage({
                   {customers.map((customer) => (
                     <TableRow key={customer.id}>
                       <TableCell>
-                        <Link
-                          href={`/customers/${customer.id}`}
-                          className="font-medium underline-offset-4 hover:underline"
-                        >
+                        <LinkText href={`/customers/${customer.id}`}>
                           {customer.name}
-                        </Link>
+                        </LinkText>
                       </TableCell>
-                      <TableCell>{customer.phone ?? "—"}</TableCell>
-                      <TableCell>{customer.email ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {customer.phone ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {customer.email ?? "—"}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

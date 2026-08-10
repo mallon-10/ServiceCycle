@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageTitle } from "@/components/ui/typography";
 
 const STEPS = [
   {
@@ -23,7 +24,7 @@ export function EmptyStateOnboarding() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Bem-vindo ao ServiceCycle</h1>
+        <PageTitle>Bem-vindo ao ServiceCycle</PageTitle>
         <p className="text-sm text-muted-foreground">
           Nunca mais perca uma manutenção preventiva ou uma oportunidade de
           pós-venda. Veja como começar:

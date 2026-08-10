@@ -4,6 +4,7 @@ import { createMaintenanceRule } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageTitle } from "@/components/ui/typography";
 import {
   Card,
   CardContent,
@@ -32,7 +33,7 @@ export default async function NewMaintenanceRulePage({
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Nova regra de manutenção</h1>
+        <PageTitle>Nova regra de manutenção</PageTitle>
         <p className="text-sm text-muted-foreground">
           Vinculada ao ativo {asset.name}
         </p>

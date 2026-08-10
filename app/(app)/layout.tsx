@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "../(auth)/actions";
 import { Button } from "@/components/ui/button";
+import { NavLinks } from "@/components/app/nav-links";
 
 export default async function AppLayout({
   children,
@@ -34,23 +35,13 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b bg-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="font-semibold">
+            <Link href="/dashboard" className="font-semibold text-primary">
               ServiceCycle
             </Link>
-            <nav className="flex gap-4 text-sm text-muted-foreground">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="hover:text-foreground"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <NavLinks items={navItems} />
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">

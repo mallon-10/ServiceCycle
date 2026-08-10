@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,30 +11,11 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { SearchBox } from "@/components/ui/search-box";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { todayDateString, upcomingThresholdDateString } from "@/lib/maintenance/scheduling";
+import { PageTitle } from "@/components/ui/typography";
+import { LinkText } from "@/components/ui/link-text";
+import { MaintenanceStatusBadge } from "@/components/maintenance/status-badge";
 
 const PAGE_SIZE = 20;
-
-function MaintenanceStatusBadge({
-  nextDate,
-  today,
-  threshold,
-}: {
-  nextDate: string | null;
-  today: string;
-  threshold: string;
-}) {
-  if (!nextDate) {
-    return <Badge variant="secondary">Sem manutenção agendada</Badge>;
-  }
-  if (nextDate < today) {
-    return <Badge variant="destructive">Vencida</Badge>;
-  }
-  if (nextDate <= threshold) {
-    return <Badge variant="default">Vencendo</Badge>;
-  }
-  return <Badge variant="outline">Em dia</Badge>;
-}
 
 export default async function AssetsPage({
   searchParams,
@@ -48,8 +28,6 @@ export default async function AssetsPage({
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
-  const today = todayDateString();
-  const threshold = upcomingThresholdDateString();
 
   let query = supabase
     .from("assets")
@@ -85,7 +63,7 @@ export default async function AssetsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Ativos</h1>
+        <PageTitle>Ativos</PageTitle>
         <p className="text-sm text-muted-foreground">
           Todos os equipamentos monitorados, de todos os clientes.
         </p>
@@ -124,27 +102,22 @@ export default async function AssetsPage({
                     return (
                       <TableRow key={asset.id}>
                         <TableCell>
-                          <Link
-                            href={`/assets/${asset.id}`}
-                            className="font-medium underline-offset-4 hover:underline"
-                          >
+                          <LinkText href={`/assets/${asset.id}`}>
                             {asset.name}
-                          </Link>
+                          </LinkText>
                         </TableCell>
                         <TableCell>
                           {asset.category ? (
-                            <Badge variant="outline">{asset.category}</Badge>
+                            <Badge variant="secondary">{asset.category}</Badge>
                           ) : (
-                            "—"
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell>{customerName ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {customerName ?? "—"}
+                        </TableCell>
                         <TableCell>
-                          <MaintenanceStatusBadge
-                            nextDate={nextDate}
-                            today={today}
-                            threshold={threshold}
-                          />
+                          <MaintenanceStatusBadge nextDate={nextDate} />
                         </TableCell>
                       </TableRow>
                     );

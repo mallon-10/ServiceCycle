@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PageTitle } from "@/components/ui/typography";
 import {
   Card,
   CardContent,
@@ -19,7 +20,7 @@ export default async function NewCustomerPage({
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-semibold">Novo cliente</h1>
+      <PageTitle>Novo cliente</PageTitle>
       <Card>
         <CardHeader>
           <CardTitle>Dados do cliente</CardTitle>
