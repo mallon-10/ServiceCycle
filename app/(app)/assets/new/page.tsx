@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CategorySelect } from "@/components/assets/category-select";
 import {
   Card,
   CardContent,
@@ -54,14 +55,7 @@ export default async function NewAssetPage({
                 placeholder="Ex: Split Sala 2, Gerador Loja Centro"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Input
-                id="category"
-                name="category"
-                placeholder="Ex: Climatização, Gerador, Painel solar"
-              />
-            </div>
+            <CategorySelect />
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="manufacturer">Fabricante</Label>

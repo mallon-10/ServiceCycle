@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { calculateNextDate, toDateString } from "@/lib/maintenance/scheduling";
+import { createRuleWithFirstEvent } from "@/lib/maintenance/create-rule";
 
 export async function createMaintenanceRule(formData: FormData) {
   const supabase = await createClient();
@@ -37,39 +37,21 @@ export async function createMaintenanceRule(formData: FormData) {
     .eq("id", assetId)
     .single();
 
-  const { data: rule, error: ruleError } = await supabase
-    .from("maintenance_rules")
-    .insert({
-      tenant_id: profile.tenant_id,
-      asset_id: assetId,
-      name,
-      interval_days: intervalDays,
-    })
-    .select("id")
-    .single();
-
-  if (ruleError) {
-    redirect(
-      `/maintenance-rules/new?asset_id=${assetId}&error=${encodeURIComponent(ruleError.message)}`
-    );
-  }
-
   const baseDate = asset?.install_date
     ? new Date(asset.install_date)
     : new Date();
-  const nextDate = calculateNextDate(baseDate, intervalDays);
 
-  const { error: eventError } = await supabase.from("maintenance_events").insert({
-    tenant_id: profile.tenant_id,
-    asset_id: assetId,
-    rule_id: rule.id,
-    scheduled_date: toDateString(nextDate),
-    status: "scheduled",
+  const { error } = await createRuleWithFirstEvent(supabase, {
+    tenantId: profile.tenant_id,
+    assetId,
+    name,
+    intervalDays,
+    baseDate,
   });
 
-  if (eventError) {
+  if (error) {
     redirect(
-      `/maintenance-rules/new?asset_id=${assetId}&error=${encodeURIComponent(eventError.message)}`
+      `/maintenance-rules/new?asset_id=${assetId}&error=${encodeURIComponent(error.message)}`
     );
   }
 

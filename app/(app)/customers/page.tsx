@@ -10,13 +10,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import { SearchBox } from "@/components/ui/search-box";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
-export default async function CustomersPage() {
+const PAGE_SIZE = 20;
+
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
+  const { q, page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
-  const { data: customers } = await supabase
+  let query = supabase
     .from("customers")
-    .select("id, name, phone, email, created_at")
-    .order("created_at", { ascending: false });
+    .select("id, name, phone, email, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (q) {
+    query = query.ilike("name", `%${q}%`);
+  }
+
+  const { data: customers, count } = await query;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   return (
     <div className="space-y-6">
@@ -32,46 +53,66 @@ export default async function CustomersPage() {
         </Link>
       </div>
 
+      <SearchBox placeholder="Buscar por nome..." />
+
       {!customers || customers.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Nenhum cliente cadastrado ainda.{" "}
-            <Link href="/customers/new" className="underline underline-offset-4">
-              Cadastre o primeiro
-            </Link>
-            .
+            {q ? (
+              "Nenhum cliente encontrado para essa busca."
+            ) : (
+              <>
+                Nenhum cliente cadastrado ainda.{" "}
+                <Link
+                  href="/customers/new"
+                  className="underline underline-offset-4"
+                >
+                  Cadastre o primeiro
+                </Link>
+                .
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>E-mail</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell>
-                      <Link
-                        href={`/customers/${customer.id}`}
-                        className="font-medium underline-offset-4 hover:underline"
-                      >
-                        {customer.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{customer.phone ?? "—"}</TableCell>
-                    <TableCell>{customer.email ?? "—"}</TableCell>
+        <>
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>E-mail</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell>
+                        <Link
+                          href={`/customers/${customer.id}`}
+                          className="font-medium underline-offset-4 hover:underline"
+                        >
+                          {customer.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{customer.phone ?? "—"}</TableCell>
+                      <TableCell>{customer.email ?? "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            buildHref={(p) =>
+              `/customers?${new URLSearchParams({ ...(q ? { q } : {}), page: String(p) }).toString()}`
+            }
+          />
+        </>
       )}
     </div>
   );

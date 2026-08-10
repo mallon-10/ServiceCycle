@@ -4,6 +4,7 @@ import { completeMaintenanceEvent } from "../maintenance-events/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyStateOnboarding } from "@/components/dashboard/empty-state-onboarding";
 import {
   todayDateString,
   upcomingThresholdDateString,
@@ -37,6 +38,10 @@ export default async function DashboardPage() {
   const { count: totalCustomers } = await supabase
     .from("customers")
     .select("*", { count: "exact", head: true });
+
+  if (!totalCustomers) {
+    return <EmptyStateOnboarding />;
+  }
 
   return (
     <div className="space-y-6">

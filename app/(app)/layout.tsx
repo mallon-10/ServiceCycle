@@ -29,6 +29,7 @@ export default async function AppLayout({
   const navItems = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/customers", label: "Clientes" },
+    { href: "/assets", label: "Ativos" },
   ];
 
   return (

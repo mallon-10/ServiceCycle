@@ -42,6 +42,7 @@ export type Database = {
       assets: {
         Row: {
           category: string | null
+          category_slug: string | null
           created_at: string
           customer_id: string
           id: string
@@ -58,6 +59,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          category_slug?: string | null
           created_at?: string
           customer_id: string
           id?: string
@@ -74,6 +76,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          category_slug?: string | null
           created_at?: string
           customer_id?: string
           id?: string

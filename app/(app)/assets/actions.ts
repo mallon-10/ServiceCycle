@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { findAssetCategory } from "@/lib/catalog/asset-categories";
+import { createRuleWithFirstEvent } from "@/lib/maintenance/create-rule";
 
 export async function createAsset(formData: FormData) {
   const supabase = await createClient();
@@ -20,7 +22,8 @@ export async function createAsset(formData: FormData) {
 
   const customerId = formData.get("customer_id") as string;
   const name = formData.get("name") as string;
-  const category = (formData.get("category") as string) || null;
+  const categorySlug = (formData.get("category_slug") as string) || null;
+  const category = findAssetCategory(categorySlug)?.label ?? null;
   const manufacturer = (formData.get("manufacturer") as string) || null;
   const model = (formData.get("model") as string) || null;
   const serialNumber = (formData.get("serial_number") as string) || null;
@@ -37,6 +40,7 @@ export async function createAsset(formData: FormData) {
       customer_id: customerId,
       name,
       category,
+      category_slug: categorySlug,
       manufacturer,
       model,
       serial_number: serialNumber,
@@ -54,6 +58,21 @@ export async function createAsset(formData: FormData) {
     );
   }
 
+  const catalogCategory = findAssetCategory(categorySlug);
+  if (catalogCategory && catalogCategory.rules.length > 0) {
+    const baseDate = installDate ? new Date(installDate) : new Date();
+    for (const ruleTemplate of catalogCategory.rules) {
+      await createRuleWithFirstEvent(supabase, {
+        tenantId: profile.tenant_id,
+        assetId: asset.id,
+        name: ruleTemplate.name,
+        intervalDays: ruleTemplate.intervalDays,
+        baseDate,
+      });
+    }
+  }
+
   revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/dashboard");
   redirect(`/assets/${asset.id}`);
 }
