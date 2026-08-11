@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { deleteCustomer } from "../actions";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTitle, SectionLabel } from "@/components/ui/typography";
 import { LinkText } from "@/components/ui/link-text";
+import { DeleteButton } from "@/components/app/delete-button";
 
 export default async function CustomerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const supabase = await createClient();
 
   const { data: customer } = await supabase
@@ -30,12 +35,33 @@ export default async function CustomerDetailPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <LinkText href="/customers" variant="subtle">
-          ← Clientes
-        </LinkText>
-        <PageTitle>{customer.name}</PageTitle>
+      <div className="flex items-start justify-between">
+        <div>
+          <LinkText href="/customers" variant="subtle">
+            ← Clientes
+          </LinkText>
+          <PageTitle>{customer.name}</PageTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/customers/${customer.id}/edit`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Editar
+          </Link>
+          <DeleteButton
+            action={deleteCustomer}
+            hiddenFields={{ id: customer.id }}
+            confirmMessage={`Excluir ${customer.name}? Essa ação não pode ser desfeita.`}
+          >
+            Excluir
+          </DeleteButton>
+        </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-destructive">{decodeURIComponent(error)}</p>
+      )}
 
       <div className="space-y-3">
         <SectionLabel>Dados do cliente</SectionLabel>

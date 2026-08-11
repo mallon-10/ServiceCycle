@@ -1,13 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { completeMaintenanceEvent } from "../../maintenance-events/actions";
+import { deleteAsset } from "../actions";
+import {
+  completeMaintenanceEvent,
+  skipMaintenanceEvent,
+  rescheduleMaintenanceEvent,
+} from "../../maintenance-events/actions";
+import { toggleMaintenanceRuleActive } from "../../maintenance-rules/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTitle, SectionLabel } from "@/components/ui/typography";
 import { LinkText } from "@/components/ui/link-text";
 import { MaintenanceStatusBadge } from "@/components/maintenance/status-badge";
+import { RescheduleForm } from "@/components/maintenance/reschedule-form";
+import { DeleteButton } from "@/components/app/delete-button";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -56,13 +64,30 @@ export default async function AssetDetailPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <LinkText href={`/customers/${asset.customer_id}`} variant="subtle">
-          ← {customerName ?? "Cliente"}
-        </LinkText>
-        <div className="flex items-center gap-3">
-          <PageTitle>{asset.name}</PageTitle>
-          {asset.category && <Badge variant="secondary">{asset.category}</Badge>}
+      <div className="flex items-start justify-between">
+        <div>
+          <LinkText href={`/customers/${asset.customer_id}`} variant="subtle">
+            ← {customerName ?? "Cliente"}
+          </LinkText>
+          <div className="flex items-center gap-3">
+            <PageTitle>{asset.name}</PageTitle>
+            {asset.category && <Badge variant="secondary">{asset.category}</Badge>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/assets/${asset.id}/edit`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Editar
+          </Link>
+          <DeleteButton
+            action={deleteAsset}
+            hiddenFields={{ id: asset.id, customer_id: asset.customer_id }}
+            confirmMessage={`Excluir ${asset.name}? Isso também apaga as regras de manutenção e o histórico deste ativo. Essa ação não pode ser desfeita.`}
+          >
+            Excluir
+          </DeleteButton>
         </div>
       </div>
 
@@ -136,9 +161,27 @@ export default async function AssetDetailPage({
                       A cada {rule.interval_days} dias
                     </div>
                   </div>
-                  <Badge variant={rule.active ? "default" : "secondary"}>
-                    {rule.active ? "Ativa" : "Inativa"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/maintenance-rules/${rule.id}/edit`}
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    >
+                      Editar
+                    </Link>
+                    <form action={toggleMaintenanceRuleActive}>
+                      <input type="hidden" name="id" value={rule.id} />
+                      <input type="hidden" name="asset_id" value={asset.id} />
+                      <input type="hidden" name="active" value={String(rule.active)} />
+                      <button type="submit">
+                        <Badge
+                          variant={rule.active ? "default" : "secondary"}
+                          className="cursor-pointer"
+                        >
+                          {rule.active ? "Ativa" : "Inativa"}
+                        </Badge>
+                      </button>
+                    </form>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -158,20 +201,35 @@ export default async function AssetDetailPage({
           <div className="space-y-2">
             {scheduledEvents.map((event) => (
               <Card key={event.id}>
-                <CardContent className="flex items-center justify-between py-3">
+                <CardContent className="flex flex-wrap items-center justify-between gap-2 py-3">
                   <div className="flex items-center gap-3">
                     <MaintenanceStatusBadge nextDate={event.scheduled_date} />
                     <div className="font-medium">
                       {formatDate(event.scheduled_date)}
                     </div>
                   </div>
-                  <form action={completeMaintenanceEvent} className="flex items-center gap-2">
-                    <input type="hidden" name="event_id" value={event.id} />
-                    <input type="hidden" name="asset_id" value={asset.id} />
-                    <Button type="submit" size="sm">
-                      Marcar como executada
-                    </Button>
-                  </form>
+                  <div className="flex items-center gap-2">
+                    <RescheduleForm
+                      action={rescheduleMaintenanceEvent}
+                      eventId={event.id}
+                      assetId={asset.id}
+                      currentDate={event.scheduled_date}
+                    />
+                    <form action={skipMaintenanceEvent}>
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <input type="hidden" name="asset_id" value={asset.id} />
+                      <Button type="submit" size="sm" variant="ghost">
+                        Pular
+                      </Button>
+                    </form>
+                    <form action={completeMaintenanceEvent}>
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <input type="hidden" name="asset_id" value={asset.id} />
+                      <Button type="submit" size="sm">
+                        Marcar como executada
+                      </Button>
+                    </form>
+                  </div>
                 </CardContent>
               </Card>
             ))}

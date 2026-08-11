@@ -1,3 +1,4 @@
+import { Users, Wrench, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { completeMaintenanceEvent } from "../maintenance-events/actions";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,17 @@ import { EmptyStateOnboarding } from "@/components/dashboard/empty-state-onboard
 import { PageTitle, SectionLabel } from "@/components/ui/typography";
 import { LinkText } from "@/components/ui/link-text";
 import { MaintenanceStatusBadge } from "@/components/maintenance/status-badge";
-import { upcomingThresholdDateString } from "@/lib/maintenance/scheduling";
+import {
+  todayDateString,
+  upcomingThresholdDateString,
+} from "@/lib/maintenance/scheduling";
+
+type Opportunity = {
+  id: string;
+  scheduled_date: string;
+  asset_id: string;
+  assets: { name: string; customers: { name: string } | null } | null;
+};
 
 function formatDate(value: string) {
   return new Date(value + "T00:00:00Z").toLocaleDateString("pt-BR", {
@@ -14,16 +25,49 @@ function formatDate(value: string) {
   });
 }
 
+function OpportunityList({ opportunities }: { opportunities: Opportunity[] }) {
+  return (
+    <div className="space-y-2">
+      {opportunities.map((opp) => {
+        const asset = opp.assets;
+        return (
+          <Card key={opp.id}>
+            <CardContent className="flex items-center justify-between py-3">
+              <div className="flex items-center gap-3">
+                <MaintenanceStatusBadge nextDate={opp.scheduled_date} />
+                <div>
+                  <LinkText href={`/assets/${opp.asset_id}`}>
+                    {asset?.name ?? "Ativo"}
+                  </LinkText>
+                  <div className="text-sm text-muted-foreground">
+                    {asset?.customers?.name} · {formatDate(opp.scheduled_date)}
+                  </div>
+                </div>
+              </div>
+              <form action={completeMaintenanceEvent}>
+                <input type="hidden" name="event_id" value={opp.id} />
+                <input type="hidden" name="asset_id" value={opp.asset_id} />
+                <Button type="submit" size="sm">
+                  Marcar como executada
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
+  const today = todayDateString();
   const threshold = upcomingThresholdDateString();
 
   const { data: opportunities } = await supabase
     .from("maintenance_events")
-    .select(
-      "id, scheduled_date, asset_id, assets(name, customers(name))"
-    )
+    .select("id, scheduled_date, asset_id, assets(name, customers(name))")
     .eq("status", "scheduled")
     .lte("scheduled_date", threshold)
     .order("scheduled_date", { ascending: true });
@@ -40,6 +84,10 @@ export default async function DashboardPage() {
     return <EmptyStateOnboarding />;
   }
 
+  const allOpportunities = (opportunities ?? []) as unknown as Opportunity[];
+  const overdue = allOpportunities.filter((o) => o.scheduled_date < today);
+  const dueSoon = allOpportunities.filter((o) => o.scheduled_date >= today);
+
   return (
     <div className="space-y-8">
       <div>
@@ -51,74 +99,66 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Card>
-          <CardContent className="py-4">
-            <div className="text-sm text-muted-foreground">Clientes</div>
-            <div className="text-3xl font-semibold text-primary">
-              {totalCustomers ?? 0}
+          <CardContent className="flex items-start justify-between py-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Clientes</div>
+              <div className="text-3xl font-semibold tabular-nums text-foreground">
+                {totalCustomers ?? 0}
+              </div>
             </div>
+            <Users className="size-4 text-muted-foreground" strokeWidth={2} />
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="py-4">
-            <div className="text-sm text-muted-foreground">Ativos</div>
-            <div className="text-3xl font-semibold text-primary">
-              {totalAssets ?? 0}
+          <CardContent className="flex items-start justify-between py-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Ativos</div>
+              <div className="text-3xl font-semibold tabular-nums text-foreground">
+                {totalAssets ?? 0}
+              </div>
             </div>
+            <Wrench className="size-4 text-muted-foreground" strokeWidth={2} />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="py-4">
-            <div className="text-sm text-muted-foreground">Oportunidades</div>
-            <div className="text-3xl font-semibold text-primary">
-              {opportunities?.length ?? 0}
+        <Card className="ring-status-critical-foreground/15">
+          <CardContent className="flex items-start justify-between py-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Vencidas</div>
+              <div className="text-3xl font-semibold tabular-nums text-status-critical-foreground">
+                {overdue.length}
+              </div>
             </div>
+            <AlertTriangle
+              className="size-4 text-status-critical-foreground"
+              strokeWidth={2}
+            />
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-3">
-        <SectionLabel>Manutenções pendentes</SectionLabel>
-
-        {!opportunities || opportunities.length === 0 ? (
+        <SectionLabel>Vencidas — ação urgente</SectionLabel>
+        {overdue.length === 0 ? (
           <Card>
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            <CardContent className="py-6 text-center text-sm text-muted-foreground">
+              Nenhuma manutenção vencida. Em dia.
+            </CardContent>
+          </Card>
+        ) : (
+          <OpportunityList opportunities={overdue} />
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <SectionLabel>Vencendo nos próximos 7 dias</SectionLabel>
+        {dueSoon.length === 0 ? (
+          <Card>
+            <CardContent className="py-6 text-center text-sm text-muted-foreground">
               Nenhuma manutenção vencendo nos próximos 7 dias.
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
-            {opportunities.map((opp) => {
-              const asset = opp.assets as {
-                name: string;
-                customers: { name: string } | null;
-              } | null;
-
-              return (
-                <Card key={opp.id}>
-                  <CardContent className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <MaintenanceStatusBadge nextDate={opp.scheduled_date} />
-                      <div>
-                        <LinkText href={`/assets/${opp.asset_id}`}>
-                          {asset?.name ?? "Ativo"}
-                        </LinkText>
-                        <div className="text-sm text-muted-foreground">
-                          {asset?.customers?.name} · {formatDate(opp.scheduled_date)}
-                        </div>
-                      </div>
-                    </div>
-                    <form action={completeMaintenanceEvent}>
-                      <input type="hidden" name="event_id" value={opp.id} />
-                      <input type="hidden" name="asset_id" value={opp.asset_id} />
-                      <Button type="submit" size="sm">
-                        Marcar como executada
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          <OpportunityList opportunities={dueSoon} />
         )}
       </div>
     </div>

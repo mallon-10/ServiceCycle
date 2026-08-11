@@ -59,3 +59,59 @@ export async function createMaintenanceRule(formData: FormData) {
   revalidatePath("/dashboard");
   redirect(`/assets/${assetId}`);
 }
+
+export async function updateMaintenanceRule(formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) redirect("/login");
+
+  const id = formData.get("id") as string;
+  const assetId = formData.get("asset_id") as string;
+  const name = formData.get("name") as string;
+  const intervalDays = Number(formData.get("interval_days"));
+
+  if (!Number.isFinite(intervalDays) || intervalDays <= 0) {
+    redirect(
+      `/assets/${assetId}?error=${encodeURIComponent(
+        "Intervalo precisa ser um número de dias maior que zero."
+      )}`
+    );
+  }
+
+  const { error } = await supabase
+    .from("maintenance_rules")
+    .update({ name, interval_days: intervalDays })
+    .eq("id", id);
+
+  if (error) {
+    redirect(`/assets/${assetId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/assets/${assetId}`);
+  redirect(`/assets/${assetId}`);
+}
+
+export async function toggleMaintenanceRuleActive(formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) redirect("/login");
+
+  const id = formData.get("id") as string;
+  const assetId = formData.get("asset_id") as string;
+  const active = formData.get("active") === "true";
+
+  const { error } = await supabase
+    .from("maintenance_rules")
+    .update({ active: !active })
+    .eq("id", id);
+
+  if (error) {
+    redirect(`/assets/${assetId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/assets/${assetId}`);
+  revalidatePath("/dashboard");
+  redirect(`/assets/${assetId}`);
+}

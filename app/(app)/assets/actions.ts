@@ -76,3 +76,64 @@ export async function createAsset(formData: FormData) {
   revalidatePath("/dashboard");
   redirect(`/assets/${asset.id}`);
 }
+
+export async function updateAsset(formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) redirect("/login");
+
+  const id = formData.get("id") as string;
+  const name = formData.get("name") as string;
+  const manufacturer = (formData.get("manufacturer") as string) || null;
+  const model = (formData.get("model") as string) || null;
+  const serialNumber = (formData.get("serial_number") as string) || null;
+  const installDate = (formData.get("install_date") as string) || null;
+  const warrantyExpiresAt =
+    (formData.get("warranty_expires_at") as string) || null;
+  const location = (formData.get("location") as string) || null;
+  const notes = (formData.get("notes") as string) || null;
+
+  const { error } = await supabase
+    .from("assets")
+    .update({
+      name,
+      manufacturer,
+      model,
+      serial_number: serialNumber,
+      install_date: installDate,
+      warranty_expires_at: warrantyExpiresAt,
+      location,
+      notes,
+    })
+    .eq("id", id);
+
+  if (error) {
+    redirect(`/assets/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/assets/${id}`);
+  revalidatePath("/assets");
+  redirect(`/assets/${id}`);
+}
+
+export async function deleteAsset(formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) redirect("/login");
+
+  const id = formData.get("id") as string;
+  const customerId = formData.get("customer_id") as string;
+
+  const { error } = await supabase.from("assets").delete().eq("id", id);
+
+  if (error) {
+    redirect(`/assets/${id}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/assets");
+  revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/dashboard");
+  redirect(`/customers/${customerId}`);
+}
