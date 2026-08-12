@@ -4,6 +4,7 @@ import { createMaintenanceRule } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { PageTitle } from "@/components/ui/typography";
 import {
   Card,
@@ -68,6 +69,33 @@ export default async function NewMaintenanceRulePage({
                 A próxima manutenção será agendada automaticamente com base
                 nesse intervalo.
               </p>
+            </div>
+            <div className="space-y-4 border-t pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="estimated_value">
+                  Valor estimado da oportunidade (opcional)
+                </Label>
+                <Input
+                  id="estimated_value"
+                  name="estimated_value"
+                  inputMode="decimal"
+                  placeholder="Ex: 1800,00"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Aparece como valor em jogo na página de Oportunidades quando
+                  essa manutenção vencer.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="opportunity_note">
+                  Contexto da oportunidade (opcional)
+                </Label>
+                <Textarea
+                  id="opportunity_note"
+                  name="opportunity_note"
+                  placeholder="Ex: Gerador fora de garantia, risco alto de parada"
+                />
+              </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit">Salvar regra</Button>

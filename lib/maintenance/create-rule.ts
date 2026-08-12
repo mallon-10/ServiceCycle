@@ -8,6 +8,8 @@ type Params = {
   name: string;
   intervalDays: number;
   baseDate: Date;
+  estimatedValueCents?: number | null;
+  opportunityNote?: string | null;
 };
 
 /**
@@ -18,7 +20,15 @@ type Params = {
  */
 export async function createRuleWithFirstEvent(
   supabase: SupabaseClient<Database>,
-  { tenantId, assetId, name, intervalDays, baseDate }: Params
+  {
+    tenantId,
+    assetId,
+    name,
+    intervalDays,
+    baseDate,
+    estimatedValueCents,
+    opportunityNote,
+  }: Params
 ) {
   const { data: rule, error: ruleError } = await supabase
     .from("maintenance_rules")
@@ -27,6 +37,8 @@ export async function createRuleWithFirstEvent(
       asset_id: assetId,
       name,
       interval_days: intervalDays,
+      estimated_value_cents: estimatedValueCents ?? null,
+      opportunity_note: opportunityNote ?? null,
     })
     .select("id")
     .single();

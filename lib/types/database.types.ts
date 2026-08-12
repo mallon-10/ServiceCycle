@@ -160,6 +160,7 @@ export type Database = {
           completion_notes: string | null
           created_at: string
           id: string
+          opportunity_stage: string
           rule_id: string | null
           scheduled_date: string
           status: string
@@ -172,6 +173,7 @@ export type Database = {
           completion_notes?: string | null
           created_at?: string
           id?: string
+          opportunity_stage?: string
           rule_id?: string | null
           scheduled_date: string
           status?: string
@@ -184,6 +186,7 @@ export type Database = {
           completion_notes?: string | null
           created_at?: string
           id?: string
+          opportunity_stage?: string
           rule_id?: string | null
           scheduled_date?: string
           status?: string
@@ -225,9 +228,11 @@ export type Database = {
           active: boolean
           asset_id: string
           created_at: string
+          estimated_value_cents: number | null
           id: string
           interval_days: number
           name: string
+          opportunity_note: string | null
           tenant_id: string
           updated_at: string
         }
@@ -235,9 +240,11 @@ export type Database = {
           active?: boolean
           asset_id: string
           created_at?: string
+          estimated_value_cents?: number | null
           id?: string
           interval_days: number
           name: string
+          opportunity_note?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -245,9 +252,11 @@ export type Database = {
           active?: boolean
           asset_id?: string
           created_at?: string
+          estimated_value_cents?: number | null
           id?: string
           interval_days?: number
           name?: string
+          opportunity_note?: string | null
           tenant_id?: string
           updated_at?: string
         }

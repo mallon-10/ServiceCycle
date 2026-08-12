@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createRuleWithFirstEvent } from "@/lib/maintenance/create-rule";
+import { parseCurrencyInputToCents } from "@/lib/format";
 
 export async function createMaintenanceRule(formData: FormData) {
   const supabase = await createClient();
@@ -22,6 +23,10 @@ export async function createMaintenanceRule(formData: FormData) {
   const assetId = formData.get("asset_id") as string;
   const name = formData.get("name") as string;
   const intervalDays = Number(formData.get("interval_days"));
+  const estimatedValueCents = parseCurrencyInputToCents(
+    (formData.get("estimated_value") as string) || ""
+  );
+  const opportunityNote = (formData.get("opportunity_note") as string) || null;
 
   if (!Number.isFinite(intervalDays) || intervalDays <= 0) {
     redirect(
@@ -47,6 +52,8 @@ export async function createMaintenanceRule(formData: FormData) {
     name,
     intervalDays,
     baseDate,
+    estimatedValueCents,
+    opportunityNote,
   });
 
   if (error) {
@@ -70,6 +77,10 @@ export async function updateMaintenanceRule(formData: FormData) {
   const assetId = formData.get("asset_id") as string;
   const name = formData.get("name") as string;
   const intervalDays = Number(formData.get("interval_days"));
+  const estimatedValueCents = parseCurrencyInputToCents(
+    (formData.get("estimated_value") as string) || ""
+  );
+  const opportunityNote = (formData.get("opportunity_note") as string) || null;
 
   if (!Number.isFinite(intervalDays) || intervalDays <= 0) {
     redirect(
@@ -81,7 +92,12 @@ export async function updateMaintenanceRule(formData: FormData) {
 
   const { error } = await supabase
     .from("maintenance_rules")
-    .update({ name, interval_days: intervalDays })
+    .update({
+      name,
+      interval_days: intervalDays,
+      estimated_value_cents: estimatedValueCents,
+      opportunity_note: opportunityNote,
+    })
     .eq("id", id);
 
   if (error) {

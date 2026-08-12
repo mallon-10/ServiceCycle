@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Wrench, Calendar } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, Calendar, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agenda", label: "Agenda", icon: Calendar },
+  { href: "/opportunities", label: "Oportunidades", icon: Target },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/assets", label: "Ativos", icon: Wrench },
 ];
