@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "../(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { NavLinks } from "@/components/app/nav-links";
+import { GlobalSearch } from "@/components/app/global-search";
 
 export default async function AppLayout({
   children,
@@ -74,6 +75,9 @@ export default async function AppLayout({
       </aside>
 
       <div className="flex flex-1 flex-col pl-60">
+        <header className="sticky top-0 z-10 flex h-14 items-center border-b border-border bg-background/95 px-8 backdrop-blur supports-backdrop-filter:bg-background/80">
+          <GlobalSearch />
+        </header>
         <main className="flex-1 px-8 py-8">
           <div className="mx-auto max-w-5xl">{children}</div>
         </main>

@@ -43,6 +43,44 @@ function daysUntil(scheduledDate: string, today: string) {
   return diff;
 }
 
+async function RadarEmptyState({ hasFilter }: { hasFilter: boolean }) {
+  const supabase = await createClient();
+  const today = todayDateString();
+
+  const { count: totalAssets } = await supabase
+    .from("assets")
+    .select("*", { count: "exact", head: true });
+
+  const { data: nextEvent } = await supabase
+    .from("cycle_events")
+    .select("scheduled_date")
+    .eq("status", "scheduled")
+    .order("scheduled_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const nextDays = nextEvent ? daysUntil(nextEvent.scheduled_date, today) : null;
+
+  return (
+    <Card>
+      <CardContent className="py-10 text-center text-sm text-muted-foreground">
+        {hasFilter
+          ? "Nenhuma oportunidade encontrada para este filtro."
+          : "Nenhuma oportunidade em aberto agora."}
+        <br />
+        O ServiceCycle está monitorando {totalAssets ?? 0} ativo
+        {totalAssets === 1 ? "" : "s"}.
+        {nextDays != null && (
+          <>
+            <br />
+            A próxima oportunidade prevista será em {nextDays <= 0 ? "breve" : `${nextDays} dias`}.
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function RadarPage({
   searchParams,
 }: {
@@ -148,12 +186,7 @@ export default async function RadarPage({
       </div>
 
       {opportunities.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Nenhuma oportunidade encontrada para este filtro.
-            <br />O ServiceCycle continua monitorando sua base instalada.
-          </CardContent>
-        </Card>
+        <RadarEmptyState hasFilter={Boolean(q || period || priority || stage || crm)} />
       ) : (
         <div className="space-y-2">
           {opportunities.map((opp) => {
