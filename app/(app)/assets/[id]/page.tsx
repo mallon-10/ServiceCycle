@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { deleteAsset } from "../actions";
@@ -8,6 +9,7 @@ import {
   rescheduleMaintenanceEvent,
 } from "../../maintenance-events/actions";
 import { toggleMaintenanceRuleActive } from "../../maintenance-rules/actions";
+import { findAssetCategory } from "@/lib/catalog/asset-categories";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +40,7 @@ export default async function AssetDetailPage({
   const { data: asset } = await supabase
     .from("assets")
     .select(
-      "id, name, category, manufacturer, model, serial_number, install_date, warranty_expires_at, location, notes, customer_id, customers(name)"
+      "id, name, category, category_slug, manufacturer, model, serial_number, install_date, warranty_expires_at, location, notes, customer_id, customers(name)"
     )
     .eq("id", id)
     .single();
@@ -46,6 +48,7 @@ export default async function AssetDetailPage({
   if (!asset) notFound();
 
   const customerName = (asset.customers as { name: string } | null)?.name;
+  const categoryInfo = findAssetCategory(asset.category_slug);
 
   const { data: rules } = await supabase
     .from("maintenance_rules")
@@ -98,6 +101,20 @@ export default async function AssetDetailPage({
       <div className="space-y-3">
         <SectionLabel>Dados do ativo</SectionLabel>
         <Card>
+          {categoryInfo && (
+            <div className="relative h-40 w-full overflow-hidden">
+              <Image
+                src={categoryInfo.imageUrl}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 640px, 100vw"
+              />
+              <span className="absolute bottom-2 right-2 rounded bg-background/80 px-1.5 py-0.5 text-[10px] text-muted-foreground backdrop-blur-sm">
+                Imagem ilustrativa
+              </span>
+            </div>
+          )}
           <CardContent className="grid grid-cols-2 gap-4 pt-6 text-sm sm:grid-cols-3">
             <div>
               <div className="text-muted-foreground">Fabricante</div>

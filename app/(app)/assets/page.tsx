@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +15,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageTitle } from "@/components/ui/typography";
 import { LinkText } from "@/components/ui/link-text";
 import { MaintenanceStatusBadge } from "@/components/maintenance/status-badge";
+import { findAssetCategory } from "@/lib/catalog/asset-categories";
 
 const PAGE_SIZE = 20;
 
@@ -31,7 +33,7 @@ export default async function AssetsPage({
 
   let query = supabase
     .from("assets")
-    .select("id, name, category, customers(name)", { count: "exact" })
+    .select("id, name, category, category_slug, customers(name)", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -86,6 +88,7 @@ export default async function AssetsPage({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-14"></TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Cliente</TableHead>
@@ -98,9 +101,23 @@ export default async function AssetsPage({
                       asset.customers as { name: string } | null
                     )?.name;
                     const nextDate = nextDateByAsset.get(asset.id) ?? null;
+                    const categoryInfo = findAssetCategory(asset.category_slug);
 
                     return (
                       <TableRow key={asset.id}>
+                        <TableCell>
+                          {categoryInfo && (
+                            <div className="relative size-10 overflow-hidden rounded-md">
+                              <Image
+                                src={categoryInfo.imageUrl}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <LinkText href={`/assets/${asset.id}`}>
                             {asset.name}
