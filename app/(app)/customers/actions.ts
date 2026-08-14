@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { geocodeAddress } from "@/lib/geocoding";
+import { logActivity } from "@/lib/activity/log";
 
 export async function createCustomer(formData: FormData) {
   const supabase = await createClient();
@@ -44,6 +45,14 @@ export async function createCustomer(formData: FormData) {
   if (error) {
     redirect(`/customers/new?error=${encodeURIComponent(error.message)}`);
   }
+
+  await logActivity(supabase, {
+    tenantId: profile.tenant_id,
+    subjectType: "customer",
+    subjectId: customer.id,
+    eventType: "customer_created",
+    description: `Cliente "${name}" cadastrado`,
+  });
 
   revalidatePath("/customers");
   redirect(`/customers/${customer.id}`);
