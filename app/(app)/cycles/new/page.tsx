@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createMaintenanceRule } from "../actions";
+import { createCycleEventTemplate } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EventTypeSelect } from "@/components/cycles/event-type-select";
 
-export default async function NewMaintenanceRulePage({
+export default async function NewCycleEventPage({
   searchParams,
 }: {
   searchParams: Promise<{ asset_id?: string; error?: string }>;
@@ -34,20 +35,20 @@ export default async function NewMaintenanceRulePage({
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <PageTitle>Nova regra de manutenção</PageTitle>
+        <PageTitle>Novo evento de ciclo</PageTitle>
         <p className="text-sm text-muted-foreground">
-          Vinculada ao ativo {asset.name}
+          Vinculado ao ativo {asset.name}
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Regra</CardTitle>
+          <CardTitle>Evento</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createMaintenanceRule} className="space-y-4">
+          <form action={createCycleEventTemplate} className="space-y-4">
             <input type="hidden" name="asset_id" value={asset.id} />
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da manutenção</Label>
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
                 name="name"
@@ -55,25 +56,42 @@ export default async function NewMaintenanceRulePage({
                 placeholder="Ex: Troca de filtro, Revisão geral"
               />
             </div>
+            <EventTypeSelect />
             <div className="space-y-2">
-              <Label htmlFor="interval_days">Intervalo (dias)</Label>
+              <Label htmlFor="interval_value">Periodicidade (dias)</Label>
               <Input
-                id="interval_days"
-                name="interval_days"
+                id="interval_value"
+                name="interval_value"
                 type="number"
                 min={1}
                 required
                 placeholder="Ex: 180"
               />
               <p className="text-xs text-muted-foreground">
-                A próxima manutenção será agendada automaticamente com base
+                A próxima ocorrência será calculada automaticamente com base
                 nesse intervalo.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="commercial_lead_days">
+                Iniciar abordagem comercial (dias antes)
+              </Label>
+              <Input
+                id="commercial_lead_days"
+                name="commercial_lead_days"
+                type="number"
+                min={0}
+                defaultValue={0}
+              />
+              <p className="text-xs text-muted-foreground">
+                O ServiceCycle detecta a oportunidade essa quantidade de dias
+                antes da data prevista, não só no dia exato.
               </p>
             </div>
             <div className="space-y-4 border-t pt-4">
               <div className="space-y-2">
                 <Label htmlFor="estimated_value">
-                  Valor estimado da oportunidade (opcional)
+                  Receita potencial (opcional)
                 </Label>
                 <Input
                   id="estimated_value"
@@ -81,10 +99,6 @@ export default async function NewMaintenanceRulePage({
                   inputMode="decimal"
                   placeholder="Ex: 1800,00"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Aparece como valor em jogo na página de Oportunidades quando
-                  essa manutenção vencer.
-                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="opportunity_note">
@@ -98,7 +112,7 @@ export default async function NewMaintenanceRulePage({
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit">Salvar regra</Button>
+            <Button type="submit">Salvar evento</Button>
           </form>
         </CardContent>
       </Card>

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateMaintenanceRule } from "../../actions";
+import { updateCycleEventTemplate } from "../../actions";
 import { saveChecklistTemplate } from "../../checklist-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChecklistEditor } from "@/components/maintenance/checklist-editor";
+import { EventTypeSelect } from "@/components/cycles/event-type-select";
 
-export default async function EditMaintenanceRulePage({
+export default async function EditCycleEventTemplatePage({
   params,
   searchParams,
 }: {
@@ -26,79 +27,86 @@ export default async function EditMaintenanceRulePage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const { data: rule } = await supabase
-    .from("maintenance_rules")
+  const { data: template } = await supabase
+    .from("cycle_event_templates")
     .select(
-      "id, name, interval_days, asset_id, estimated_value_cents, opportunity_note, assets(name)"
+      "id, name, event_type, interval_value, commercial_lead_days, asset_id, estimated_value_cents, opportunity_note, assets(name)"
     )
     .eq("id", id)
     .single();
 
-  if (!rule) notFound();
+  if (!template) notFound();
 
-  const assetName = (rule.assets as { name: string } | null)?.name;
+  const assetName = (template.assets as { name: string } | null)?.name;
 
   const { data: checklistItems } = await supabase
     .from("checklist_items")
     .select("description")
-    .eq("rule_id", id)
+    .eq("cycle_event_template_id", id)
     .order("sort_order", { ascending: true });
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <PageTitle>Editar regra de manutenção</PageTitle>
+        <PageTitle>Editar evento de ciclo</PageTitle>
         <p className="text-sm text-muted-foreground">
-          Vinculada ao ativo {assetName}
+          Vinculado ao ativo {assetName}
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Regra</CardTitle>
+          <CardTitle>Evento</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={updateMaintenanceRule} className="space-y-4">
-            <input type="hidden" name="id" value={rule.id} />
-            <input type="hidden" name="asset_id" value={rule.asset_id} />
+          <form action={updateCycleEventTemplate} className="space-y-4">
+            <input type="hidden" name="id" value={template.id} />
+            <input type="hidden" name="asset_id" value={template.asset_id ?? ""} />
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da manutenção</Label>
-              <Input id="name" name="name" required defaultValue={rule.name} />
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" name="name" required defaultValue={template.name} />
             </div>
+            <EventTypeSelect defaultValue={template.event_type} />
             <div className="space-y-2">
-              <Label htmlFor="interval_days">Intervalo (dias)</Label>
+              <Label htmlFor="interval_value">Periodicidade (dias)</Label>
               <Input
-                id="interval_days"
-                name="interval_days"
+                id="interval_value"
+                name="interval_value"
                 type="number"
                 min={1}
                 required
-                defaultValue={rule.interval_days}
+                defaultValue={template.interval_value}
               />
               <p className="text-xs text-muted-foreground">
                 Alterar o intervalo não muda a próxima data já agendada — vale
                 a partir da próxima renovação do ciclo.
               </p>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="commercial_lead_days">
+                Iniciar abordagem comercial (dias antes)
+              </Label>
+              <Input
+                id="commercial_lead_days"
+                name="commercial_lead_days"
+                type="number"
+                min={0}
+                defaultValue={template.commercial_lead_days}
+              />
+            </div>
             <div className="space-y-4 border-t pt-4">
               <div className="space-y-2">
-                <Label htmlFor="estimated_value">
-                  Valor estimado da oportunidade (opcional)
-                </Label>
+                <Label htmlFor="estimated_value">Receita potencial (opcional)</Label>
                 <Input
                   id="estimated_value"
                   name="estimated_value"
                   inputMode="decimal"
                   placeholder="Ex: 1800,00"
                   defaultValue={
-                    rule.estimated_value_cents != null
-                      ? (rule.estimated_value_cents / 100).toFixed(2).replace(".", ",")
+                    template.estimated_value_cents != null
+                      ? (template.estimated_value_cents / 100).toFixed(2).replace(".", ",")
                       : ""
                   }
                 />
-                <p className="text-xs text-muted-foreground">
-                  Aparece como valor em jogo na página de Oportunidades quando
-                  essa manutenção vencer.
-                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="opportunity_note">
@@ -108,7 +116,7 @@ export default async function EditMaintenanceRulePage({
                   id="opportunity_note"
                   name="opportunity_note"
                   placeholder="Ex: Gerador fora de garantia, risco alto de parada"
-                  defaultValue={rule.opportunity_note ?? ""}
+                  defaultValue={template.opportunity_note ?? ""}
                 />
               </div>
             </div>
@@ -124,8 +132,8 @@ export default async function EditMaintenanceRulePage({
         </CardHeader>
         <CardContent>
           <form action={saveChecklistTemplate} className="space-y-4">
-            <input type="hidden" name="rule_id" value={rule.id} />
-            <input type="hidden" name="asset_id" value={rule.asset_id} />
+            <input type="hidden" name="template_id" value={template.id} />
+            <input type="hidden" name="asset_id" value={template.asset_id ?? ""} />
             <ChecklistEditor
               initialItems={(checklistItems ?? []).map((i) => i.description)}
             />

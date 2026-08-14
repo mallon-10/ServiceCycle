@@ -5,25 +5,28 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Replaces all checklist items of a rule with the given descriptions —
- * simplest correct behavior for a small, admin-edited list (avoids diffing
- * add/remove/reorder against existing rows).
+ * Replaces all checklist items of a cycle_event_template with the given
+ * descriptions — simplest correct behavior for a small, admin-edited list
+ * (avoids diffing add/remove/reorder against existing rows).
  */
 export async function replaceChecklistItems(
   tenantId: string,
-  ruleId: string,
+  cycleEventTemplateId: string,
   descriptions: string[]
 ) {
   const supabase = await createClient();
 
-  await supabase.from("checklist_items").delete().eq("rule_id", ruleId);
+  await supabase
+    .from("checklist_items")
+    .delete()
+    .eq("cycle_event_template_id", cycleEventTemplateId);
 
   const rows = descriptions
     .map((d) => d.trim())
     .filter(Boolean)
     .map((description, i) => ({
       tenant_id: tenantId,
-      rule_id: ruleId,
+      cycle_event_template_id: cycleEventTemplateId,
       description,
       sort_order: i,
     }));
@@ -47,11 +50,11 @@ export async function saveChecklistTemplate(formData: FormData) {
 
   if (!profile) redirect("/login");
 
-  const ruleId = formData.get("rule_id") as string;
+  const templateId = formData.get("template_id") as string;
   const assetId = formData.get("asset_id") as string;
   const descriptions = formData.getAll("item") as string[];
 
-  await replaceChecklistItems(profile.tenant_id, ruleId, descriptions);
+  await replaceChecklistItems(profile.tenant_id, templateId, descriptions);
 
   revalidatePath(`/assets/${assetId}`);
   redirect(`/assets/${assetId}`);
