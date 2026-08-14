@@ -164,6 +164,7 @@ export type Database = {
           rule_id: string | null
           scheduled_date: string
           status: string
+          technician_id: string | null
           tenant_id: string
         }
         Insert: {
@@ -177,6 +178,7 @@ export type Database = {
           rule_id?: string | null
           scheduled_date: string
           status?: string
+          technician_id?: string | null
           tenant_id: string
         }
         Update: {
@@ -190,6 +192,7 @@ export type Database = {
           rule_id?: string | null
           scheduled_date?: string
           status?: string
+          technician_id?: string | null
           tenant_id?: string
         }
         Relationships: [
@@ -212,6 +215,13 @@ export type Database = {
             columns: ["rule_id"]
             isOneToOne: false
             referencedRelation: "maintenance_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
             referencedColumns: ["id"]
           },
           {

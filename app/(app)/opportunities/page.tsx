@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { advanceOpportunityStage } from "./actions";
+import { advanceOpportunityStage, assignTechnician } from "./actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageTitle } from "@/components/ui/typography";
 import { LinkText } from "@/components/ui/link-text";
 import { StageSelect } from "@/components/opportunities/stage-select";
+import { TechnicianSelect } from "@/components/opportunities/technician-select";
 import { formatCurrencyBRL } from "@/lib/format";
 import { todayDateString } from "@/lib/maintenance/scheduling";
 
@@ -12,6 +13,7 @@ type OpportunityEvent = {
   asset_id: string;
   scheduled_date: string;
   opportunity_stage: string;
+  technician_id: string | null;
   assets: { name: string; customers: { name: string } | null } | null;
   maintenance_rules: {
     name: string;
@@ -52,11 +54,17 @@ export default async function OpportunitiesPage({
   const { data: events } = await supabase
     .from("maintenance_events")
     .select(
-      "id, asset_id, scheduled_date, opportunity_stage, assets(name, customers(name)), maintenance_rules(name, estimated_value_cents, opportunity_note)"
+      "id, asset_id, scheduled_date, opportunity_stage, technician_id, assets(name, customers(name)), maintenance_rules(name, estimated_value_cents, opportunity_note)"
     )
     .eq("status", "scheduled")
     .neq("opportunity_stage", "lost")
     .order("scheduled_date", { ascending: true });
+
+  const { data: technicians } = await supabase
+    .from("technicians")
+    .select("id, name")
+    .eq("active", true)
+    .order("name", { ascending: true });
 
   const opportunities = (events ?? []) as unknown as OpportunityEvent[];
 
@@ -155,6 +163,12 @@ export default async function OpportunitiesPage({
                             action={advanceOpportunityStage}
                             eventId={opp.id}
                             stage={opp.opportunity_stage}
+                          />
+                          <TechnicianSelect
+                            action={assignTechnician}
+                            eventId={opp.id}
+                            technicianId={opp.technician_id}
+                            technicians={technicians ?? []}
                           />
                         </CardContent>
                       </Card>

@@ -33,3 +33,26 @@ export async function advanceOpportunityStage(formData: FormData) {
   revalidatePath("/opportunities");
   redirect("/opportunities");
 }
+
+export async function assignTechnician(formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) redirect("/login");
+
+  const eventId = formData.get("event_id") as string;
+  const technicianId = (formData.get("technician_id") as string) || null;
+
+  const { error } = await supabase
+    .from("maintenance_events")
+    .update({ technician_id: technicianId })
+    .eq("id", eventId);
+
+  if (error) {
+    redirect(`/opportunities?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/opportunities");
+  revalidatePath("/agenda");
+  redirect("/opportunities");
+}
