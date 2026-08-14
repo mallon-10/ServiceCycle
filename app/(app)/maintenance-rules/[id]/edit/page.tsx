@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateMaintenanceRule } from "../../actions";
+import { saveChecklistTemplate } from "../../checklist-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ChecklistEditor } from "@/components/maintenance/checklist-editor";
 
 export default async function EditMaintenanceRulePage({
   params,
@@ -35,6 +37,12 @@ export default async function EditMaintenanceRulePage({
   if (!rule) notFound();
 
   const assetName = (rule.assets as { name: string } | null)?.name;
+
+  const { data: checklistItems } = await supabase
+    .from("checklist_items")
+    .select("description")
+    .eq("rule_id", id)
+    .order("sort_order", { ascending: true });
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -106,6 +114,24 @@ export default async function EditMaintenanceRulePage({
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit">Salvar alterações</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Checklist</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={saveChecklistTemplate} className="space-y-4">
+            <input type="hidden" name="rule_id" value={rule.id} />
+            <input type="hidden" name="asset_id" value={rule.asset_id} />
+            <ChecklistEditor
+              initialItems={(checklistItems ?? []).map((i) => i.description)}
+            />
+            <Button type="submit" variant="outline">
+              Salvar checklist
+            </Button>
           </form>
         </CardContent>
       </Card>

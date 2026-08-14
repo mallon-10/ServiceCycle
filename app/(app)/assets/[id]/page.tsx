@@ -17,6 +17,7 @@ import { PageTitle, SectionLabel } from "@/components/ui/typography";
 import { LinkText } from "@/components/ui/link-text";
 import { MaintenanceStatusBadge } from "@/components/maintenance/status-badge";
 import { RescheduleForm } from "@/components/maintenance/reschedule-form";
+import { CompleteEventForm } from "@/components/maintenance/complete-event-form";
 import { DeleteButton } from "@/components/app/delete-button";
 
 function formatDate(value: string | null) {
@@ -58,12 +59,27 @@ export default async function AssetDetailPage({
 
   const { data: events } = await supabase
     .from("maintenance_events")
-    .select("id, scheduled_date, status, completed_at, completion_notes")
+    .select("id, scheduled_date, status, completed_at, completion_notes, rule_id")
     .eq("asset_id", id)
     .order("scheduled_date", { ascending: false });
 
   const scheduledEvents = (events ?? []).filter((e) => e.status === "scheduled");
   const pastEvents = (events ?? []).filter((e) => e.status !== "scheduled");
+
+  const ruleIds = [...new Set((rules ?? []).map((r) => r.id))];
+  const checklistByRule = new Map<string, { id: string; description: string }[]>();
+  if (ruleIds.length > 0) {
+    const { data: checklistItems } = await supabase
+      .from("checklist_items")
+      .select("id, description, rule_id")
+      .in("rule_id", ruleIds)
+      .order("sort_order", { ascending: true });
+
+    for (const item of checklistItems ?? []) {
+      if (!checklistByRule.has(item.rule_id)) checklistByRule.set(item.rule_id, []);
+      checklistByRule.get(item.rule_id)!.push({ id: item.id, description: item.description });
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -183,7 +199,9 @@ export default async function AssetDetailPage({
                       href={`/maintenance-rules/${rule.id}/edit`}
                       className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
-                      Editar
+                      {(checklistByRule.get(rule.id)?.length ?? 0) > 0
+                        ? "Editar / checklist"
+                        : "Editar"}
                     </Link>
                     <form action={toggleMaintenanceRuleActive}>
                       <input type="hidden" name="id" value={rule.id} />
@@ -239,13 +257,14 @@ export default async function AssetDetailPage({
                         Pular
                       </Button>
                     </form>
-                    <form action={completeMaintenanceEvent}>
-                      <input type="hidden" name="event_id" value={event.id} />
-                      <input type="hidden" name="asset_id" value={asset.id} />
-                      <Button type="submit" size="sm">
-                        Marcar como executada
-                      </Button>
-                    </form>
+                    <CompleteEventForm
+                      action={completeMaintenanceEvent}
+                      eventId={event.id}
+                      assetId={asset.id}
+                      checklistItems={
+                        event.rule_id ? checklistByRule.get(event.rule_id) ?? [] : []
+                      }
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -269,9 +288,19 @@ export default async function AssetDetailPage({
                     <div className="font-medium">
                       {formatDate(event.scheduled_date)}
                     </div>
-                    <Badge variant="outline">
-                      {event.status === "completed" ? "Executada" : "Pulada"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">
+                        {event.status === "completed" ? "Executada" : "Pulada"}
+                      </Badge>
+                      {event.status === "completed" && (
+                        <a
+                          href={`/assets/${asset.id}/events/${event.id}/pdf`}
+                          className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        >
+                          Gerar PDF
+                        </a>
+                      )}
+                    </div>
                   </div>
                   {event.completed_at && (
                     <div className="text-sm text-muted-foreground">

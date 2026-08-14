@@ -22,6 +22,7 @@ export async function completeMaintenanceEvent(formData: FormData) {
   const eventId = formData.get("event_id") as string;
   const assetId = formData.get("asset_id") as string;
   const notes = (formData.get("completion_notes") as string) || null;
+  const checkedItemIds = formData.getAll("checked_item") as string[];
 
   const { error: updateError } = await supabase
     .from("maintenance_events")
@@ -44,6 +45,22 @@ export async function completeMaintenanceEvent(formData: FormData) {
     .single();
 
   if (event?.rule_id) {
+    const { data: items } = await supabase
+      .from("checklist_items")
+      .select("id")
+      .eq("rule_id", event.rule_id);
+
+    if (items && items.length > 0) {
+      await supabase.from("checklist_results").insert(
+        items.map((item) => ({
+          tenant_id: profile.tenant_id,
+          event_id: eventId,
+          checklist_item_id: item.id,
+          checked: checkedItemIds.includes(item.id),
+        }))
+      );
+    }
+
     const { data: rule } = await supabase
       .from("maintenance_rules")
       .select("interval_days, active")

@@ -39,6 +39,97 @@ export type Database = {
   }
   public: {
     Tables: {
+      checklist_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          rule_id: string
+          sort_order: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          rule_id: string
+          sort_order?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          rule_id?: string
+          sort_order?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_results: {
+        Row: {
+          checked: boolean
+          checklist_item_id: string
+          created_at: string
+          event_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          checked?: boolean
+          checklist_item_id: string
+          created_at?: string
+          event_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          checked?: boolean
+          checklist_item_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_results_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_results_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_results_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assets: {
         Row: {
           category: string | null
