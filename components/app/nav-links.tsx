@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Wrench, Calendar, Target } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Wrench,
+  Calendar,
+  Target,
+  HardHat,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -11,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/opportunities", label: "Oportunidades", icon: Target },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/assets", label: "Ativos", icon: Wrench },
+  { href: "/team", label: "Equipe", icon: HardHat },
 ];
 
 export function NavLinks() {
