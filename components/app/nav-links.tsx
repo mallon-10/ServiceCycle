@@ -9,6 +9,7 @@ import {
   Calendar,
   Target,
   HardHat,
+  Map,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/assets", label: "Ativos", icon: Wrench },
   { href: "/team", label: "Equipe", icon: HardHat },
+  { href: "/map", label: "Mapa", icon: Map },
 ];
 
 export function NavLinks() {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { geocodeAddress } from "@/lib/geocoding";
 
 export async function createCustomer(formData: FormData) {
   const supabase = await createClient();
@@ -23,6 +24,7 @@ export async function createCustomer(formData: FormData) {
   const phone = (formData.get("phone") as string) || null;
   const email = (formData.get("email") as string) || null;
   const address = (formData.get("address") as string) || null;
+  const geocoded = address ? await geocodeAddress(address) : null;
 
   const { data: customer, error } = await supabase
     .from("customers")
@@ -33,6 +35,8 @@ export async function createCustomer(formData: FormData) {
       phone,
       email,
       address,
+      latitude: geocoded?.latitude ?? null,
+      longitude: geocoded?.longitude ?? null,
     })
     .select("id")
     .single();
@@ -57,10 +61,19 @@ export async function updateCustomer(formData: FormData) {
   const phone = (formData.get("phone") as string) || null;
   const email = (formData.get("email") as string) || null;
   const address = (formData.get("address") as string) || null;
+  const geocoded = address ? await geocodeAddress(address) : null;
 
   const { error } = await supabase
     .from("customers")
-    .update({ name, document, phone, email, address })
+    .update({
+      name,
+      document,
+      phone,
+      email,
+      address,
+      latitude: geocoded?.latitude ?? null,
+      longitude: geocoded?.longitude ?? null,
+    })
     .eq("id", id);
 
   if (error) {

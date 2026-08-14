@@ -206,6 +206,8 @@ export type Database = {
           document: string | null
           email: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           name: string
           phone: string | null
           tenant_id: string
@@ -217,6 +219,8 @@ export type Database = {
           document?: string | null
           email?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name: string
           phone?: string | null
           tenant_id: string
@@ -228,6 +232,8 @@ export type Database = {
           document?: string | null
           email?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           phone?: string | null
           tenant_id?: string
