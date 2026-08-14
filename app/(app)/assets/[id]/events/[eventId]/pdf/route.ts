@@ -16,16 +16,16 @@ export async function GET(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { data: event } = await supabase
-    .from("maintenance_events")
+  const { data: service } = await supabase
+    .from("services")
     .select(
-      "id, scheduled_date, completed_at, completion_notes, rule_id, technician_id, maintenance_rules(name), technicians(name)"
+      "id, scheduled_date, completed_at, completion_notes, cycle_event_id, technician_id, technicians(name), cycle_events(cycle_event_templates(name))"
     )
     .eq("id", eventId)
     .eq("asset_id", assetId)
     .single();
 
-  if (!event) {
+  if (!service) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -44,10 +44,12 @@ export async function GET(
   const { data: checklistResults } = await supabase
     .from("checklist_results")
     .select("checked, checklist_items(description)")
-    .eq("event_id", eventId);
+    .eq("service_id", service.id);
 
-  const ruleName = (event.maintenance_rules as { name: string } | null)?.name;
-  const technicianName = (event.technicians as { name: string } | null)?.name;
+  const templateName = (
+    service.cycle_events as { cycle_event_templates: { name: string } | null } | null
+  )?.cycle_event_templates?.name;
+  const technicianName = (service.technicians as { name: string } | null)?.name;
   const customer = asset.customers as { name: string; address: string | null } | null;
 
   const stream = await renderToStream(
@@ -59,11 +61,11 @@ export async function GET(
       serialNumber: asset.serial_number,
       customerName: customer?.name ?? null,
       customerAddress: customer?.address ?? null,
-      ruleName: ruleName ?? null,
-      scheduledDate: event.scheduled_date,
-      completedAt: event.completed_at,
+      ruleName: templateName ?? null,
+      scheduledDate: service.scheduled_date,
+      completedAt: service.completed_at,
       technicianName: technicianName ?? null,
-      completionNotes: event.completion_notes,
+      completionNotes: service.completion_notes,
       checklist: (checklistResults ?? []).map((r) => ({
         description:
           (r.checklist_items as { description: string } | null)?.description ?? "",
@@ -75,7 +77,7 @@ export async function GET(
   return new Response(stream as unknown as ReadableStream, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="OS-${asset.name}-${event.scheduled_date}.pdf"`,
+      "Content-Disposition": `inline; filename="OS-${asset.name}-${service.scheduled_date}.pdf"`,
     },
   });
 }

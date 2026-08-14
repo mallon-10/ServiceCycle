@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { findAssetCategory } from "@/lib/catalog/asset-categories";
-import { createRuleWithFirstEvent } from "@/lib/maintenance/create-rule";
+import { createCycleEventTemplateWithFirstEvent } from "@/lib/cycle/create-cycle-event";
+import { logActivity } from "@/lib/activity/log";
 
 export async function createAsset(formData: FormData) {
   const supabase = await createClient();
@@ -62,15 +63,25 @@ export async function createAsset(formData: FormData) {
   if (catalogCategory && catalogCategory.rules.length > 0) {
     const baseDate = installDate ? new Date(installDate) : new Date();
     for (const ruleTemplate of catalogCategory.rules) {
-      await createRuleWithFirstEvent(supabase, {
+      await createCycleEventTemplateWithFirstEvent(supabase, {
         tenantId: profile.tenant_id,
         assetId: asset.id,
         name: ruleTemplate.name,
-        intervalDays: ruleTemplate.intervalDays,
+        eventType: "preventive",
+        intervalValue: ruleTemplate.intervalDays,
         baseDate,
       });
     }
   }
+
+  await logActivity(supabase, {
+    tenantId: profile.tenant_id,
+    subjectType: "asset",
+    subjectId: asset.id,
+    eventType: "asset_created",
+    description: `Ativo "${name}" cadastrado`,
+    metadata: { category_slug: categorySlug },
+  });
 
   revalidatePath(`/customers/${customerId}`);
   revalidatePath("/dashboard");
