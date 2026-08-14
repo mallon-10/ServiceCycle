@@ -20,15 +20,15 @@ export default async function MapPage() {
   const techniciansByCustomer = new Map<string, Set<string>>();
 
   if (customerIds.length > 0) {
-    const { data: events } = await supabase
-      .from("maintenance_events")
+    const { data: completedServices } = await supabase
+      .from("services")
       .select(
         "status, technician_id, assets(customer_id), technicians(name)"
       )
       .eq("status", "completed");
 
-    for (const event of events ?? []) {
-      const customerId = (event.assets as { customer_id: string } | null)
+    for (const service of completedServices ?? []) {
+      const customerId = (service.assets as { customer_id: string } | null)
         ?.customer_id;
       if (!customerId || !customerIds.includes(customerId)) continue;
 
@@ -37,7 +37,7 @@ export default async function MapPage() {
         (completedByCustomer.get(customerId) ?? 0) + 1
       );
 
-      const techName = (event.technicians as { name: string } | null)?.name;
+      const techName = (service.technicians as { name: string } | null)?.name;
       if (techName) {
         if (!techniciansByCustomer.has(customerId)) {
           techniciansByCustomer.set(customerId, new Set());

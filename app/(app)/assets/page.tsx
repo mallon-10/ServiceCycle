@@ -49,7 +49,7 @@ export default async function AssetsPage({
 
   if (assetIds.length > 0) {
     const { data: events } = await supabase
-      .from("maintenance_events")
+      .from("cycle_events")
       .select("asset_id, scheduled_date")
       .in("asset_id", assetIds)
       .eq("status", "scheduled")
