@@ -39,37 +39,532 @@ export type Database = {
   }
   public: {
     Tables: {
-      checklist_items: {
+      asset_categories: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          label: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          label: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          label?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      cycle_templates: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          manufacturer: string | null
+          model: string | null
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cycle_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "asset_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cycle_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cycle_event_templates: {
+        Row: {
+          active: boolean
+          asset_id: string | null
+          commercial_lead_days: number
+          created_at: string
+          cycle_template_id: string | null
+          estimated_value_cents: number | null
+          event_type: string
+          id: string
+          interval_unit: string
+          interval_value: number
+          name: string
+          opportunity_note: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          asset_id?: string | null
+          commercial_lead_days?: number
+          created_at?: string
+          cycle_template_id?: string | null
+          estimated_value_cents?: number | null
+          event_type?: string
+          id?: string
+          interval_unit?: string
+          interval_value: number
+          name: string
+          opportunity_note?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          asset_id?: string | null
+          commercial_lead_days?: number
+          created_at?: string
+          cycle_template_id?: string | null
+          estimated_value_cents?: number | null
+          event_type?: string
+          id?: string
+          interval_unit?: string
+          interval_value?: number
+          name?: string
+          opportunity_note?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_rules_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cycle_event_templates_cycle_template_id_fkey"
+            columns: ["cycle_template_id"]
+            isOneToOne: false
+            referencedRelation: "cycle_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cycle_events: {
+        Row: {
+          asset_id: string
+          completed_at: string | null
+          completed_by: string | null
+          completion_notes: string | null
+          created_at: string
+          id: string
+          opportunity_stage: string
+          scheduled_date: string
+          status: string
+          technician_id: string | null
+          template_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          asset_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          id?: string
+          opportunity_stage?: string
+          scheduled_date: string
+          status?: string
+          technician_id?: string | null
+          template_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          asset_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          id?: string
+          opportunity_stage?: string
+          scheduled_date?: string
+          status?: string
+          technician_id?: string | null
+          template_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_events_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_rule_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "cycle_event_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunities: {
+        Row: {
+          asset_id: string
+          created_at: string
+          crm_reference: string | null
+          customer_id: string
+          cycle_event_id: string
+          detected_at: string
+          estimated_value_cents: number | null
+          id: string
+          priority: string
+          responsible_profile_id: string | null
+          sent_to_crm_at: string | null
+          stage: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          crm_reference?: string | null
+          customer_id: string
+          cycle_event_id: string
+          detected_at?: string
+          estimated_value_cents?: number | null
+          id?: string
+          priority?: string
+          responsible_profile_id?: string | null
+          sent_to_crm_at?: string | null
+          stage?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          crm_reference?: string | null
+          customer_id?: string
+          cycle_event_id?: string
+          detected_at?: string
+          estimated_value_cents?: number | null
+          id?: string
+          priority?: string
+          responsible_profile_id?: string | null
+          sent_to_crm_at?: string | null
+          stage?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_cycle_event_id_fkey"
+            columns: ["cycle_event_id"]
+            isOneToOne: false
+            referencedRelation: "cycle_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_responsible_profile_id_fkey"
+            columns: ["responsible_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          asset_id: string
+          completed_at: string | null
+          completed_by: string | null
+          completion_notes: string | null
+          created_at: string
+          cycle_event_id: string | null
+          id: string
+          opportunity_id: string | null
+          scheduled_date: string
+          scheduled_time: string | null
+          status: string
+          technician_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          cycle_event_id?: string | null
+          id?: string
+          opportunity_id?: string | null
+          scheduled_date: string
+          scheduled_time?: string | null
+          status?: string
+          technician_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          cycle_event_id?: string | null
+          id?: string
+          opportunity_id?: string | null
+          scheduled_date?: string
+          scheduled_time?: string | null
+          status?: string
+          technician_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_cycle_event_id_fkey"
+            columns: ["cycle_event_id"]
+            isOneToOne: false
+            referencedRelation: "cycle_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_log: {
         Row: {
           created_at: string
           description: string
+          event_type: string
           id: string
-          rule_id: string
-          sort_order: number
+          metadata: Json
+          subject_id: string
+          subject_type: string
           tenant_id: string
         }
         Insert: {
           created_at?: string
           description: string
+          event_type: string
           id?: string
-          rule_id: string
-          sort_order?: number
+          metadata?: Json
+          subject_id: string
+          subject_type: string
           tenant_id: string
         }
         Update: {
           created_at?: string
           description?: string
+          event_type?: string
           id?: string
-          rule_id?: string
+          metadata?: Json
+          subject_id?: string
+          subject_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          category: string
+          config: Json
+          connected_at: string | null
+          created_at: string
+          id: string
+          provider: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          config?: Json
+          connected_at?: string | null
+          created_at?: string
+          id?: string
+          provider: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          config?: Json
+          connected_at?: string | null
+          created_at?: string
+          id?: string
+          provider?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_items: {
+        Row: {
+          created_at: string
+          cycle_event_template_id: string
+          description: string
+          id: string
+          sort_order: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_event_template_id: string
+          description: string
+          id?: string
+          sort_order?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_event_template_id?: string
+          description?: string
+          id?: string
           sort_order?: number
           tenant_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "checklist_items_rule_id_fkey"
-            columns: ["rule_id"]
+            columns: ["cycle_event_template_id"]
             isOneToOne: false
-            referencedRelation: "maintenance_rules"
+            referencedRelation: "cycle_event_templates"
             referencedColumns: ["id"]
           },
           {
@@ -88,6 +583,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          service_id: string | null
           tenant_id: string
         }
         Insert: {
@@ -96,6 +592,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          service_id?: string | null
           tenant_id: string
         }
         Update: {
@@ -104,6 +601,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          service_id?: string | null
           tenant_id?: string
         }
         Relationships: [
@@ -118,7 +616,14 @@ export type Database = {
             foreignKeyName: "checklist_results_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "maintenance_events"
+            referencedRelation: "cycle_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_results_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
           {
@@ -249,141 +754,6 @@ export type Database = {
           },
         ]
       }
-      maintenance_events: {
-        Row: {
-          asset_id: string
-          completed_at: string | null
-          completed_by: string | null
-          completion_notes: string | null
-          created_at: string
-          id: string
-          opportunity_stage: string
-          rule_id: string | null
-          scheduled_date: string
-          status: string
-          technician_id: string | null
-          tenant_id: string
-        }
-        Insert: {
-          asset_id: string
-          completed_at?: string | null
-          completed_by?: string | null
-          completion_notes?: string | null
-          created_at?: string
-          id?: string
-          opportunity_stage?: string
-          rule_id?: string | null
-          scheduled_date: string
-          status?: string
-          technician_id?: string | null
-          tenant_id: string
-        }
-        Update: {
-          asset_id?: string
-          completed_at?: string | null
-          completed_by?: string | null
-          completion_notes?: string | null
-          created_at?: string
-          id?: string
-          opportunity_stage?: string
-          rule_id?: string | null
-          scheduled_date?: string
-          status?: string
-          technician_id?: string | null
-          tenant_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "maintenance_events_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_events_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_events_rule_id_fkey"
-            columns: ["rule_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_rules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_events_technician_id_fkey"
-            columns: ["technician_id"]
-            isOneToOne: false
-            referencedRelation: "technicians"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_events_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      maintenance_rules: {
-        Row: {
-          active: boolean
-          asset_id: string
-          created_at: string
-          estimated_value_cents: number | null
-          id: string
-          interval_days: number
-          name: string
-          opportunity_note: string | null
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          asset_id: string
-          created_at?: string
-          estimated_value_cents?: number | null
-          id?: string
-          interval_days: number
-          name: string
-          opportunity_note?: string | null
-          tenant_id: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          asset_id?: string
-          created_at?: string
-          estimated_value_cents?: number | null
-          id?: string
-          interval_days?: number
-          name?: string
-          opportunity_note?: string | null
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "maintenance_rules_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_rules_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notification_log: {
         Row: {
           channel: string
@@ -417,7 +787,7 @@ export type Database = {
             foreignKeyName: "notification_log_maintenance_event_id_fkey"
             columns: ["maintenance_event_id"]
             isOneToOne: false
-            referencedRelation: "maintenance_events"
+            referencedRelation: "cycle_events"
             referencedColumns: ["id"]
           },
           {
